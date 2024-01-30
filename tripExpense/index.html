@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tripExpense</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+       
+        body {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">😎 TRIP Expense 😎</h1>
+
+       
+        <form id="expenseForm" class="mt-4">
+            <div class="form-group">
+                <label for="amount">Choose Expense AMOUNT 🤑:</label>
+                <input type="number" id="amount" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">DESCRIPTION 📜:</label>
+                <input type="text" id="description" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="category">CATEGOERY 🔎:</label>
+                <select id="category" class="form-control" required>
+                    <option value="Movie">Movie</option>
+                    <option value="Fuel">Fuel</option>
+                    <option value="Electricity">Electricity</option>
+                    <option value="Food">Food</option>
+                </select>
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="addExpense()">Add Expense</button>
+        </form>
+
+        <div id="expenseList" class="mt-4"></div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        function addExpense() {
+            const amount = document.getElementById('amount').value;
+            const description = document.getElementById('description').value;
+            const category = document.getElementById('category').value;
+
+            const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+
+            expenses.push({ amount, description, category });
+
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+
+            displayExpenses();
+        }
+
+        function displayExpenses() {
+            const expenseList = document.getElementById('expenseList');
+            expenseList.innerHTML = '';
+
+            const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+
+            expenses.forEach((expense, index) => {
+                const listItem = document.createElement('div');
+                listItem.innerHTML = `
+                    <p>Amount: ${expense.amount}</p>
+                    <p>Description: ${expense.description}</p>
+                    <p>Category: ${expense.category}</p>
+                    <button onclick="editExpense(${index})">Edit</button>
+                    <button onclick="deleteExpense(${index})">Delete</button>
+                    <hr>
+                `;
+                expenseList.appendChild(listItem);
+            });
+        }
+
+        function editExpense(index) {
+            const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        const editedExpense = expenses[index];
+
+        document.getElementById('amount').value = editedExpense.amount;
+        document.getElementById('description').value = editedExpense.description;
+        document.getElementById('category').value = editedExpense.category;
+
+        expenses.splice(index, 1);
+        localStorage.setItem('expenses', JSON.stringify(expenses));
+
+        displayExpenses();
+    }
+
+        function deleteExpense(index) {
+            const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            expenses.splice(index, 1);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            displayExpenses();
+        }
+
+        displayExpenses();
+    </script>
+</body>
+</html>
