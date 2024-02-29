@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Booking App</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        input, select, button {
+            padding: 8px;
+            margin-bottom: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        #filterCarNumber {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Bus Booking</h2>
+
+    <form id="bookingForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" required><br>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" required><br>
+
+        <label for="phone">Phone:</label>
+        <input type="tel" id="phone" required><br>
+
+        <label for="carNumber">Car Number:</label>
+        <select id="carNumber" required>
+            <option value="Bus1">Bus 1</option>
+            <option value="Bus2">Bus 2</option>
+            <option value="Bus3">Bus 3</option>
+        </select><br>
+        <input type="hidden" id="updateIndex">
+        <button type="button" onclick="createOrUpdate()">Save</button>
+
+    </form>
+
+    <label for="filterCarNumber">Filter by Car Number:</label>
+    <select id="filterCarNumber" onchange="filterData">
+        <option value="all">All</option>
+        <option value="Bus1">Bus 1</option>
+        <option value="Bus2">Bus 2</option>
+        <option value="Bus3">Bus 3</option>
+    </select>
+
+    <table id="bookingTable">
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Car Number</th>
+            <th>Action</th>
+        </tr>
+    </table>
+
+    <script>
+        const CRUDCRUD_API_ENDPOINT = "https://crudcrud.com/api/dde6d07572a441549c4cbd45bd35adb4/bus_booking";
+
+        async function createOrUpdate() {
+            var name = document.getElementById("name").value;
+            
+            var email = document.getElementById("email").value;
+            var phone = document.getElementById("phone").value;
+            var carNumber = document.getElementById("carNumber").value;
+
+            var updatedIndexElement = document.getElementById("updateIndex");
+            var updatedIndex = updatedIndexElement ? updatedIndexElement.value : "";
+
+            if (updatedIndex === "") {
+            
+                await postData(CRUDCRUD_API_ENDPOINT, { name, email, phone, carNumber });
+            } else {
+              
+                await putData(`${CRUDCRUD_API_ENDPOINT}/${updatedIndex}`, { name, email, phone, carNumber });
+            }
+
+       
+            clearForm();
+
+      
+            await displayData();
+        }
+
+        async function editRow(button) {
+            var row = button.parentNode.parentNode;
+            var cells = row.getElementsByTagName("td");
+
+            document.getElementById("name").value = cells[0].innerHTML;
+            document.getElementById("email").value = cells[1].innerHTML;
+            document.getElementById("phone").value = cells[2].innerHTML;
+            document.getElementById("carNumber").value = cells[3].innerHTML;
+
+            document.getElementById("updateIndex").value = row.rowIndex - 1;
+
+
+            row.parentNode.removeChild(row);
+        }
+
+        async function deleteRow(button) {
+            var row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+
+         
+            var index = row.rowIndex - 1;
+            await deleteData(`${CRUDCRUD_API_ENDPOINT}/${index}`);
+        }
+
+        async function filterData() {
+            var filterCarNumber = document.getElementById("filterCarNumber").value;
+
+
+const filteredData = await fetchData(CRUDCRUD_API_ENDPOINT + `?carNumber=${filterCarNumber}`);
+
+
+displayFilteredData(filteredData);}
+
+        async function displayData() {
+            var table = document.getElementById("bookingTable");
+
+            while (table.rows.length > 1) {
+                table.deleteRow(1);
+            }
+
+      
+            const data = await fetchData(CRUDCRUD_API_ENDPOINT);
+
+            data.forEach((entry, i) => {
+                var row = table.insertRow(1);
+
+                var cell1 = row.insertCell(0);
+                var cell2 = row.insertCell(1);
+                var cell3 = row.insertCell(2);
+                var cell4 = row.insertCell(3);
+                var cell5 = row.insertCell(4);
+
+                cell1.innerHTML = entry.name;
+                cell2.innerHTML = entry.email;
+                cell3.innerHTML = entry.phone;
+                cell4.innerHTML = entry.carNumber;
+                cell5.innerHTML = `<button onclick="editRow(this)">Edit</button> <button onclick="deleteRow(this)">Delete</button>`;
+            });
+        }
+
+        async function fetchData(endpoint) {
+            const response = await fetch(endpoint);
+            return await response.json();
+        }
+
+        async function postData(endpoint, data) {
+            await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+        }
+
+        async function putData(endpoint, data) {
+            await fetch(endpoint, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+        }
+
+        async function deleteData(endpoint) {
+            await fetch(endpoint, {
+                method: 'DELETE',
+            });
+        }
+
+        // Clear form function
+        function clearForm() {
+            document.getElementById("name").value = "";
+            document.getElementById("email").value = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("carNumber").value = "";
+            document.getElementById("updateIndex").value = "";
+        }
+
+        window.onload = async function () {
+        await displayData();
+    };
+    </script>
+
+</body>
+</html>
